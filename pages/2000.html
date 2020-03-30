@@ -1,0 +1,155 @@
+<!doctype html><html lang="en"><head>
+ <meta charset="UTF-8">
+ <!-- Global site tag (gtag.js) - Google Analytics -->
+ <script async src="https://www.googletagmanager.com/gtag/js?id=UA-2633428-1"></script>
+ <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-2633428-1');
+ </script>
+ <meta name="description" content="Concise presentations of java programming practices, tasks, and conventions, amply illustrated with syntax highlighted code examples.">
+ <meta name="keywords" content="final,java,java programming,java practices,java idiom,java style,java design patterns,java coding conventions">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+ <title>Java Practices-&gt;Use final liberally</title>
+ <link id="stylesheet" rel="stylesheet" type="text/css" href="../stylesheet9.css?3.011" media="all">
+ <link rel="icon" type="image/png" href="../images/favicon.png"> 
+</head>
+<body>
+<nav class="menu-bar" id="menu-bar">
+  <a href="../home/HomeAction.do" title="Table of Contents" style="float:left;">Home</a> &nbsp;&nbsp; 
+  <form method="GET" action="https://www.google.com/search" class="search-form" style="float:right;">
+   <input type="text" name="q" size="15" maxlength="255" value="" placeholder="Google">
+   <input type="submit" name="btnG" value="Search">
+   <input type="hidden" name="sitesearch" value="www.javapractices.com">
+  </form>
+</nav>
+<div class="page-title">Use final liberally</div>
+
+<br>Use the <code>final</code> keyword liberally to communicate your intent.
+<p>The <code>final</code> keyword has more than one meaning:
+</p><ul>
+<li>
+a <code>final</code> class cannot be extended</li>
+
+<li>
+a <code>final</code> method cannot be overridden</li>
+
+<li>
+<code>final</code> fields, parameters, and local variables cannot change their
+value once set</li>
+</ul>
+In the last case, "value" for primitives is understood in the usual sense,
+while "value" for objects means the object's <em>identity</em>, not its <em>state</em>. Once
+the identity of a <code>final</code> object reference is set, it can still
+change its state, but not its identity (that is, you can't re-point the object reference to 
+some other object).
+
+<p>Declaring primitive fields as <code>final</code> automatically ensures thread-safety
+for that field.
+</p><p>Some habitually declare parameters as <code>final</code>, since this is almost
+always the desired behaviour. Others find this verbose, and of little real benefit.
+
+</p><p>Consistently using <code>final</code> with local variables (when appropriate)
+can be useful as well. It brings attention to the non-<code>final</code> local
+variables, which usually have more logic associated with them (for example,
+<code>result</code>
+variables, accumulators, loop variables). Many find this verbose.
+A reasonable approach is to occasionally  use <code>final</code> for local variables,
+but only if there is some unusual condition, whereby making <code>final</code> explicit can call 
+attention to at least one non-<code>final</code> local variable in the method; this serves
+to quickly distinguish the non-<code>final</code> local variables from the others.
+
+</p><p>Using <code>final</code>:
+</p><ul>
+<li>clearly communicates your intent</li>
+<li>allows the compiler and virtual machine to perform minor optimizations</li>
+<li>clearly flags items which are simpler in behaviour - <code>final</code> says, 
+"<i>If you are looking for complexity, you won't find it here.</i>"</li>
+
+</ul>
+
+<b>Example</b>
+<br><pre>
+<span class="keyword">import</span> java.util.*;
+
+<span class="comment">/** This class cannot be extended, since it's final. */</span>
+<span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">class</span> Boat {
+
+  <span class="keyword">public</span> Boat(<span class="keyword">final</span> String name, <span class="keyword">final</span> <span class="keyword">int</span> length, <span class="keyword">final</span> Date dateManufactured){
+    <span class="keyword">this</span>.name = name;
+    <span class="keyword">this</span>.length = length;
+    <span class="comment">//make a defensive copy of the date
+</span>    <span class="keyword">this</span>.dateManufactured = <span class="keyword">new</span> Date(dateManufactured.getTime());
+
+    <span class="comment">//does not compile, since the items are final:
+</span>    <span class="comment">//aDateManufactured = null;
+</span>    <span class="comment">//aLength = 0;
+</span>  }
+
+  <span class="comment">/** Cannot be overridden, since the class itself is final. */</span>
+  <span class="keyword">public</span> <span class="keyword">void</span> setDate(<span class="keyword">final</span> Date newDate){
+    <span class="comment">//even though the field is final, its state can change:
+</span>    dateManufactured.setTime(newDate.getTime());
+
+    <span class="comment">//does not compile, since field is final:
+</span>    <span class="comment">//fDateManufactured = aNewDate;
+</span>  }
+
+  <span class="comment">/** Return the highest race score. */</span>
+  <span class="keyword">public</span> Integer bestRaceScore(){
+    <span class="comment">//the result reference can't be final, since it can be 
+</span>    <span class="comment">//re-pointed to different objects
+</span>    Integer result = Integer.valueOf(<span class="literal">0</span>); 
+    <span class="comment">//final Integer result = Integer.valueOf(0); //doesn't compile
+</span>    
+    <span class="comment">//this example is artificial, since raceScores could be 
+</span>    <span class="comment">//referenced directly here...
+</span>    <span class="keyword">final</span> List&lt;Integer&gt; scores = raceScores;
+    <span class="keyword">for</span>(Integer score : scores){
+      <span class="keyword">if</span> (score &gt; result){
+        result = score; <span class="comment">//re-point to the max value
+</span>      }
+    }
+    <span class="keyword">return</span> result;
+  }
+  
+  <span class="comment">//..elided
+</span>
+  <span class="comment">// PRIVATE
+</span>  <span class="keyword">private</span> <span class="keyword">final</span> String name;
+  <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> length;
+  <span class="keyword">private</span> List&lt;Integer&gt; raceScores = <span class="keyword">new</span> ArrayList&lt;&gt;();
+  <span class="comment">/** 
+   New code should almost always use java.time, not java.util.Date.
+   java.util.Date is used here simply as an example of a mutable field.
+  */</span> 
+  <span class="keyword">private</span> <span class="keyword">final</span> Date dateManufactured;
+}  
+</pre>
+
+<br>
+<p></p><div class="topic-section" id="see-also-title">See Also :</div>
+<div id="see-also" class="main-body">
+  <a href="TopicAction.do?Id=29">Immutable objects</a> <br>
+  <a href="TopicAction.do?Id=69">Designing for subclassing</a> <br>
+  <a href="TopicAction.do?Id=89">Overridable methods need special care</a> <br>
+  <a href="TopicAction.do?Id=90">Remember styles of inheritance</a> <br>
+</div>
+
+<footer id="footer" class="legalese">
+<span id="app_name">Java Practices</span> <span id="app_version_number">3.011</span><br>
+© <span id="copyright">2018 Hirondelle Systems</span><br>
+<a href="../source/SourceAction.do">Source Code</a> |
+<a href="mailto:webmaster@javapractices.com" rel="author">Contact</a> |
+<a href="https://creativecommons.org/licenses/by-nc-sa/1.0/" rel="license">License</a> |
+<a href="../apps/cjp.rss" rel="alternate" type="application/rss+xml">RSS</a>
+<!-- ukey="2AC36CD2" -->
+<!-- ckey="16DF3D87" -->
+<br>
+ Individual code snippets have a <a href="../LICENSE.txt" rel="license">BSD license</a><br>
+ Over 1,000,000 unique IPs last year<br>
+ Last updated <time id="last_updated_on" datetime="2018-09-15">2018-09-15</time><br> 
+ - In Memoriam : Bill Dirani -
+</footer>
+</body></html>
